@@ -8,9 +8,64 @@ const GameAdd = () => {
   const [status, setStatus] = useState("planned");
   const [playerCount, setPlayerCount] = useState(1);
   const [roomId, setRoomId] = useState("");
+  const [historical, setHistorical] = useState(true);
+  const [modded, setModded] = useState(false);
+  const [rules, setRules] = useState({
+    general: ["Rule 1", "Rule 2"],
+    countrySpecific: {
+      Germany: ["Rule 1", "Rule 2"],
+      Italy: ["Rule 1", "Rule 2"],
+    },
+  });
+
+  const handleRuleChange = (category, index, value) => {
+    setRules((prev) => {
+      const updatedRules = { ...prev };
+      if (category === "general") {
+        updatedRules.general[index] = value;
+      } else {
+        updatedRules.countrySpecific[category][index] = value;
+      }
+      return updatedRules;
+    });
+  };
+
+  const addGeneralRule = () => {
+    setRules((prev) => ({ ...prev, general: [...prev.general, ""] }));
+  };
+
+  const handleDeleteRule = (category, index) => {
+    setRules((prev) => {
+      const updatedRules = { ...prev };
+      if (category === "general") {
+        updatedRules.general.splice(index, 1);
+      } else {
+        updatedRules.countrySpecific[category].splice(index, 1);
+      }
+      return { ...updatedRules };
+    });
+  };
+
+  const addCountryRule = (country) => {
+    setRules((prev) => {
+      const updatedRules = { ...prev };
+      updatedRules.countrySpecific[country].push("");
+      return updatedRules;
+    });
+  };
+
+  const addCountry = () => {
+    const countryName = prompt("Enter country name:");
+    if (countryName && !rules.countrySpecific[countryName]) {
+      setRules((prev) => ({
+        ...prev,
+        countrySpecific: { ...prev.countrySpecific, [countryName]: ["Rule 1"] },
+      }));
+    }
+  };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Create new game object
@@ -19,7 +74,10 @@ const GameAdd = () => {
       status,
       player_count: playerCount,
       room_id: roomId || null,
+      rules,
     };
+
+    
 
     // Emit the 'addGame' event to WebSocket server
     socket.emit("addGame", newGame);
@@ -60,6 +118,25 @@ const GameAdd = () => {
           </select>
         </div>
 
+        <div className="flex gap-4">
+          <label>
+            <input
+              type="checkbox"
+              checked={historical}
+              onChange={() => setHistorical(!historical)}
+            />
+            Historical
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={modded}
+              onChange={() => setModded(!modded)}
+            />
+            Modded
+          </label>
+        </div>
+
         <div>
           <label htmlFor="playerCount" className="block text-sm font-semibold text-gray-300">Player Count</label>
           <input
@@ -83,6 +160,49 @@ const GameAdd = () => {
             className="mt-1 block w-full p-2 rounded-md border border-gray-700 bg-gray-900 text-white"
           />
         </div>
+
+        <h3 className="text-xl font-semibold">Game Rules</h3>
+        <div>
+          <h4 className="font-medium">General Rules</h4>
+          {rules.general.map((rule, index) => (
+            <div key={index} className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={rule}
+              onChange={(e) => handleRuleChange("general", index, e.target.value)}
+              className="w-full p-2 border rounded mt-2"
+            />
+            <button onClick={() => handleDeleteRule("general", index)} className="bg-red-500 text-white px-2 py-1 rounded">X</button>
+          </div>
+          ))}
+          <button type="button" onClick={addGeneralRule} className="bg-gray-500 text-white p-2 rounded mt-2">
+            Add General Rule
+          </button>
+        </div>
+        
+        {Object.keys(rules.countrySpecific).map((country) => (
+          <div key={country}>
+            <h4 className="font-medium mt-4">{country}</h4>
+            {rules.countrySpecific[country].map((rule, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={rule}
+                  onChange={(e) => handleRuleChange(country, index, e.target.value)}
+                  className="w-full p-2 border rounded mt-2"
+                />
+                <button onClick={() => handleDeleteRule(country, index)} className="bg-red-500 text-white px-2 py-1 rounded">X</button>
+            </div>
+            ))}
+            <button type="button" onClick={() => addCountryRule(country)} className="bg-gray-500 text-white p-2 rounded mt-2">
+              Add Rule for {country}
+            </button>
+          </div>
+        ))}
+
+        <button type="button" onClick={addCountry} className="bg-green-500 text-white p-2 rounded mt-2">
+          Add Country
+        </button>
 
         <button
           type="submit"

@@ -104,14 +104,28 @@ io.on("connection", (socket) => {
   console.log("A user connected to WebSocket");
 
   socket.on("addGame", async (newGame) => {
-    await pool.query(
-      "INSERT INTO games (host, status, player_count, room_id) VALUES ($1, $2, $3, $4)",
-      [newGame.host, newGame.status, newGame.player_count, newGame.room_id]
-    );
-
-    const updatedGames = await pool.query("SELECT * FROM games");
-    io.emit("updateGames", updatedGames.rows);
+    try {
+      await pool.query(
+        "INSERT INTO games (host, status, player_count, room_id, rules, is_historical, is_modded) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [
+          newGame.host,
+          newGame.status,
+          newGame.player_count,
+          newGame.room_id,
+          JSON.stringify(newGame.rules),
+          newGame.is_historical, // Include historical status
+          newGame.is_modded, // Include modded status
+        ]
+      );
+  
+      // Fetch updated game list and broadcast it
+      const updatedGames = await pool.query("SELECT * FROM games");
+      io.emit("updateGames", updatedGames.rows);
+    } catch (err) {
+      console.error("Error adding game:", err);
+    }
   });
+  
 
   socket.on("updateGame", async (updatedGame) => {
     // Update the game details in the database

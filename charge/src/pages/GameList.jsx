@@ -38,6 +38,18 @@ const GameList = () => {
             <p>Status: <span className={game.status === "hosted" ? "text-green-400" : "text-yellow-400"}>{game.status}</span></p>
             <p>Players: {game.player_count}</p>
             {game.room_id && <p>Room ID: <span className="font-mono bg-gray-700 px-2 py-1 rounded">{game.room_id}</span></p>}
+
+            {/* New Fields for Historical and Modded Status */}
+            <p>Type: 
+              <span className={game.is_historical ? "text-blue-400" : "text-red-400"}>
+                {game.is_historical ? "Historical" : "Unhistorical"}
+              </span>
+            </p>
+            <p>Mod Status: 
+              <span className={game.is_modded ? "text-purple-400" : "text-green-400"}>
+                {game.is_modded ? "Modded" : "Vanilla"}
+              </span>
+            </p>
           </div>
         ))}
       </div>
