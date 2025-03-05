@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import GameList from "./pages/GameList";
 import GameAdd from "./pages/GameAdd";
 import GameDetails from "./pages/GameDetails";
+import Navbar from './components/Navbar';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -19,6 +20,7 @@ function App() {
         <Route path="/" element={<GameList />} />
         <Route path="/host-game" element={<GameAdd />} />
         <Route path="/game/:gameId" element={<GameDetails />} /> {/* Game details page route */}
+        <Route path="/test" element={<Navbar />} />
       </Routes>
     </Router>
   )

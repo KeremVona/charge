@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { io } from "socket.io-client";
+import Navbar from "../components/Navbar";
 
 const socket = io("http://localhost:5000"); // WebSocket connection
 
@@ -95,6 +96,7 @@ const GameAdd = () => {
 
   return (
     <div className="container mx-auto p-6">
+      <Navbar />
       <h1 className="text-2xl font-bold mb-4">Host a New Game</h1>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
         <div>
@@ -123,16 +125,16 @@ const GameAdd = () => {
         </div>
 
         <div className="flex gap-4">
-          <label>
-            <input
+          <label className="text-gray-300">
+            <input className="mr-1"
               type="checkbox"
               checked={historical}
               onChange={() => setHistorical(!historical)}
             />
             Historical
           </label>
-          <label>
-            <input
+          <label className="text-gray-300">
+            <input className="mr-1"
               type="checkbox"
               checked={modded}
               onChange={() => setModded(!modded)}
@@ -165,16 +167,16 @@ const GameAdd = () => {
           />
         </div>
 
-        <h3 className="text-xl font-semibold">Game Rules</h3>
+        <h3 className="text-xl font-semibold text-gray-300">Game Rules</h3>
         <div>
-          <h4 className="font-medium">General Rules</h4>
+          <h4 className="font-medium text-gray-300">General Rules</h4>
           {rules.general.map((rule, index) => (
-            <div key={index} className="flex gap-2 items-center">
+            <div key={index} className="flex gap-2 items-center text-gray-300">
             <input
               type="text"
               value={rule}
               onChange={(e) => handleRuleChange("general", index, e.target.value)}
-              className="w-full p-2 border rounded mt-2"
+              className="w-full p-2 border rounded mt-2 bg-blue-700"
             />
             <button onClick={() => handleDeleteRule("general", index)} className="bg-red-500 text-white px-2 py-1 rounded">X</button>
           </div>
@@ -185,7 +187,7 @@ const GameAdd = () => {
         </div>
         
         {Object.keys(rules.countrySpecific).map((country) => (
-          <div key={country}>
+          <div key={country} className="text-gray-300">
             <h4 className="font-medium mt-4">{country}</h4>
             {rules.countrySpecific[country].map((rule, index) => (
               <div key={index} className="flex gap-2 items-center">
@@ -193,7 +195,7 @@ const GameAdd = () => {
                   type="text"
                   value={rule}
                   onChange={(e) => handleRuleChange(country, index, e.target.value)}
-                  className="w-full p-2 border rounded mt-2"
+                  className="w-full p-2 border rounded mt-2 bg-blue-700"
                 />
                 <button onClick={() => handleDeleteRule(country, index)} className="bg-red-500 text-white px-2 py-1 rounded">X</button>
             </div>

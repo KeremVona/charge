@@ -84,6 +84,8 @@ export default GameDetails;*/
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import Button1 from '../components/Button';
 
 const GameDetails = () => {
   /*const [gameDetails, setGameDetails] = useState(null);
@@ -107,6 +109,7 @@ const GameDetails = () => {
   }, [gameId]);*/
 
   const { gameId } = useParams(); // Get the gameId from the URL
+  const navigate = useNavigate(); // Hook to navigate programmatically
   console.log("gameId from URL:", gameId); // Check if it's being passed correctly
 
   const [gameDetails, setGameDetails] = useState(null);
@@ -141,27 +144,42 @@ const GameDetails = () => {
   }
 
   return (
-    <div>
-      <h1>Game Details</h1>
-      <p>Host: {gameDetails.host}</p>
-      <p>Status: {gameDetails.status}</p>
-      <p>Player Count: {gameDetails.player_count}</p>
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h1 className="text-3xl font-semibold text-center mb-4">Game Details</h1>
       
-      <h2>Rules</h2>
-      <div>
-        <h3>General Rules</h3>
-        <ul>
-          {gameDetails.rules.general && gameDetails.rules.general.map((rule, index) => (
-            <li key={index}>{rule}</li>
-          ))}
-        </ul>
+      <div className="space-y-4">
+        <p className="text-lg"><strong>Host:</strong> {gameDetails.host}</p>
+        <p className="text-lg"><strong>Status:</strong> {gameDetails.status}</p>
+        <p className="text-lg"><strong>Player Count:</strong> {gameDetails.player_count}</p>
+      </div>
 
-        <h3>Country-Specific Rules</h3>
-        <ul>
-          {Object.entries(gameDetails.rules.countrySpecific).map(([country, rule], index) => (
-            <li key={index}>{country}: {rule}</li>
-          ))}
-        </ul>
+      <div className="mt-6">
+        <h2 className="text-2xl font-semibold mb-2">Rules</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-xl font-medium">General Rules</h3>
+            <ul className="list-disc pl-5">
+              {gameDetails.rules.general && gameDetails.rules.general.map((rule, index) => (
+                <li key={index} className="text-lg">{rule}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-xl font-medium">Country-Specific Rules</h3>
+            <ul className="list-disc pl-5">
+              {Object.entries(gameDetails.rules.countrySpecific).map(([country, rule], index) => (
+                <li key={index} className="text-lg">{country}: {rule}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        
+        <Button1 />
       </div>
     </div>
   );

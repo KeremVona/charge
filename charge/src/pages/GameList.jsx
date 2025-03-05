@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
 
 const socket = io("http://localhost:5000"); // WebSocket connection
 
@@ -26,6 +27,7 @@ const GameList = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Navbar />
       <h1 className="text-2xl font-bold mb-4">Game List</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {games.map((game) => (
