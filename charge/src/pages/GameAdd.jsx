@@ -75,6 +75,8 @@ const GameAdd = () => {
       player_count: playerCount,
       room_id: roomId || null,
       rules,
+      is_historical: historical, // Ensure it's a boolean
+      is_modded: modded, // Ensure it's a boolean
     };
 
     
@@ -87,6 +89,8 @@ const GameAdd = () => {
     setStatus("planned");
     setPlayerCount(1);
     setRoomId("");
+    setHistorical(false); // Reset to default
+    setModded(false); // Reset to default
   };
 
   return (

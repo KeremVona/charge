@@ -37,46 +37,37 @@ app.get("/api/games", async (req, res) => {
   }
 });
 
+// 2
+
+//app.get gamesid
+
 // Fetch game details by ID
-app.get("/api/games/:id", async (req, res) => {
-  const { id } = req.params;
+app.get("/api/games/:gameId", async (req, res) => {
+  const { gameId } = req.params;
   try {
-    const result = await pool.query("SELECT * FROM games WHERE id = $1", [id]);
+    // Fetch game details including player_count
+    const result = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Game not found" });
     }
 
     const game = result.rows[0];
 
-    // Fetch players for this game
-    const playersResult = await pool.query("SELECT * FROM players WHERE game_id = $1", [id]);
+    // Ensure rules is parsed only if it's a string
+    const parsedRules = typeof game.rules === 'string' ? JSON.parse(game.rules) : game.rules;
 
-    // Return game details with players and rules
+    // Return game details with player_count
     res.json({
       ...game,
-      players: playersResult.rows,
-      rules: JSON.parse(game.rules), // Assuming rules are stored as JSON in DB
-      plannedTime: game.planned_time, // Or other relevant field
+      player_count: game.player_count, // Include player_count from games table
+      rules: parsedRules || { general: [], countrySpecific: {} },
+      plannedTime: game.planned_time,
       isHistorical: game.is_historical,
       isModded: game.is_modded,
     });
   } catch (err) {
+    console.error('Error fetching game details:', err);
     res.status(500).json({ error: err.message });
-  }
-});
-
-// Fetch game details by ID
-app.get("/api/games/:gameId", async (req, res) => {
-  const { gameId } = req.params;
-  try {
-    const result = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Game not found" });
-    }
-    res.json(result.rows[0]); // Return the game details
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to fetch game details" });
   }
 });
 
@@ -128,20 +119,29 @@ io.on("connection", (socket) => {
   
 
   socket.on("updateGame", async (updatedGame) => {
-    // Update the game details in the database
-    await pool.query(
-      "UPDATE games SET rules = $1, planned_time = $2, is_historical = $3, is_modded = $4 WHERE id = $5",
-      [
-        JSON.stringify(updatedGame.rules),
-        updatedGame.plannedTime,
-        updatedGame.isHistorical,
-        updatedGame.isModded,
-        updatedGame.id,
-      ]
-    );
-
-    // Broadcast updated game info to all clients
-    io.emit("updateGame", updatedGame);
+    try {
+      await pool.query(
+        "UPDATE games SET rules = $1, planned_time = $2, is_historical = $3, is_modded = $4 WHERE id = $5",
+        [
+          JSON.stringify(updatedGame.rules),
+          updatedGame.plannedTime,
+          updatedGame.isHistorical,
+          updatedGame.isModded,
+          updatedGame.id,
+        ]
+      );
+  
+      // Fetch the full updated game from the database before broadcasting
+      const result = await pool.query("SELECT * FROM games WHERE id = $1", [updatedGame.id]);
+      const fullGame = result.rows[0];
+  
+      // Ensure rules are properly parsed
+      fullGame.rules = fullGame.rules ? JSON.parse(fullGame.rules) : { general: [], countrySpecific: {} };
+  
+      io.emit("updateGame", fullGame);
+    } catch (err) {
+      console.error("Error updating game:", err);
+    }
   });
 
   socket.on("disconnect", () => {

@@ -1,76 +1,167 @@
-import { useEffect, useState } from "react";
+/*import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000"); // WebSocket connection
+const socket = io("http://localhost:5000");
 
 const GameDetails = () => {
-  const { gameId } = useParams(); // Get the game ID from URL parameters
-  const [gameDetails, setGameDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { gameId } = useParams(); // Get game ID from URL
+  const [game, setGame] = useState(null);
 
   useEffect(() => {
-    // Fetch game details when the component mounts
+    // Fetch game from server
     fetch(`http://localhost:5000/api/games/${gameId}`)
       .then((res) => res.json())
-      .then((data) => {
-        setGameDetails(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        setError("Failed to fetch game details");
-        setLoading(false);
-      });
+      .then((data) => setGame(data))
+      .catch((error) => console.error("Error fetching game:", error));
 
-    // Listen for game updates in real-time via WebSockets
+    // Listen for game updates
     socket.on("updateGame", (updatedGame) => {
-      if (updatedGame.id === parseInt(gameId)) {
-        setGameDetails(updatedGame);
+      if (updatedGame.id === gameId) {
+        setGame(updatedGame);
       }
     });
 
     return () => {
       socket.off("updateGame");
     };
-  }, [gameId]); // Run again if gameId changes
+  }, [gameId]);
 
-  if (loading) return <div>Loading...</div>;
-
-  if (error) return <div>{error}</div>;
-
-  if (!gameDetails) return <div>Game not found</div>;
+  if (!game) {
+    return <p>Loading game details...</p>;
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Game Details: {gameDetails.host}</h1>
-      <div className="bg-gray-800 text-white p-6 rounded-lg shadow-lg">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">Host: {gameDetails.host}</h2>
-          <p>Status: <span className={gameDetails.status === "hosted" ? "text-green-400" : "text-yellow-400"}>{gameDetails.status}</span></p>
-        </div>
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">Game Details</h2>
+      <p><strong>Host:</strong> {game.host}</p>
+      <p><strong>Status:</strong> {game.status}</p>
+      <p><strong>Players:</strong> {game.player_count}</p>
+      <p><strong>Room ID:</strong> {game.room_id || "N/A"}</p>
+      <p><strong>Type:</strong> {game.is_historical ? "Historical" : "Unhistorical"}</p>
+      <p><strong>Version:</strong> {game.is_modded ? "Modded" : "Vanilla"}</p>
 
-        {/* Display rules and players */}
-        <div className="mb-4">
-          <h3 className="font-semibold">General Rules</h3>
+      <h3 className="text-xl font-semibold mt-4">Game Rules</h3>
+{game.rules ? (
+  (() => {
+    const parsedRules = typeof game.rules === "string" ? JSON.parse(game.rules) : game.rules;
+
+    return (
+      <div>
+        <h4 className="font-medium">General Rules</h4>
+        {parsedRules.general && parsedRules.general.length > 0 ? (
           <ul>
-            {gameDetails.rules?.general?.map((rule, idx) => (
-              <li key={idx}>{rule}</li>
+            {parsedRules.general.map((rule, index) => (
+              <li key={index}>- {rule}</li>
             ))}
           </ul>
-        </div>
+        ) : (
+          <p>No general rules specified.</p>
+        )}
 
-        {/* Handle country-specific rules */}
-        {gameDetails.rules?.countries?.map((country, idx) => (
-          <div key={idx}>
-            <h3 className="font-semibold">{country.name}</h3>
-            <ul>
-              {country.rules.map((rule, idx) => (
-                <li key={idx}>{rule}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        {parsedRules.countrySpecific &&
+          Object.keys(parsedRules.countrySpecific).map((country) => (
+            <div key={country}>
+              <h4 className="font-medium mt-4">{country} Rules</h4>
+              <ul>
+                {parsedRules.countrySpecific[country].map((rule, index) => (
+                  <li key={index}>- {rule}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+      </div>
+    );
+  })()
+) : (
+  <p>No rules specified.</p>
+)}
+    </div>
+  );
+};
+
+export default GameDetails;*/
+
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+
+const GameDetails = () => {
+  /*const [gameDetails, setGameDetails] = useState(null);
+
+  useEffect(() => {
+    console.log("gameId:", gameId); // Check if gameId is valid
+    const fetchGameDetails = async () => {
+      try {
+        const response = await fetch(`/api/games/${gameId}`);
+        const data = await response.json();
+        console.log("Game details fetched:", data); // Log to verify the response
+        setGameDetails(data);
+      } catch (error) {
+        console.error("Error fetching game details:", error);
+      }
+    };
+
+    if (gameId) {
+      fetchGameDetails();
+    }
+  }, [gameId]);*/
+
+  const { gameId } = useParams(); // Get the gameId from the URL
+  console.log("gameId from URL:", gameId); // Check if it's being passed correctly
+
+  const [gameDetails, setGameDetails] = useState(null);
+
+  useEffect(() => {
+    if (gameId) {
+      const fetchGameDetails = async () => {
+        //const url = `/api/games/${gameId}`;
+        const url = `http://localhost:5000/api/games/${gameId}`;
+        console.log("Fetching from URL:", url); // Log the URL
+        try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          const text = await response.text(); // Get the response as text to check for error pages
+          console.error("Error response:", text); // Log the response text (which may be HTML)
+          return;
+        }
+        const data = await response.json();
+        console.log("Game details fetched:", data);
+        setGameDetails(data);
+        } catch (error) {
+          console.error("Error fetching game details:", error);
+        }
+      };
+
+      fetchGameDetails();
+    }
+  }, [gameId]);
+
+  if (!gameDetails) {
+    return <div>Loading game details...</div>;
+  }
+
+  return (
+    <div>
+      <h1>Game Details</h1>
+      <p>Host: {gameDetails.host}</p>
+      <p>Status: {gameDetails.status}</p>
+      <p>Player Count: {gameDetails.player_count}</p>
+      
+      <h2>Rules</h2>
+      <div>
+        <h3>General Rules</h3>
+        <ul>
+          {gameDetails.rules.general && gameDetails.rules.general.map((rule, index) => (
+            <li key={index}>{rule}</li>
+          ))}
+        </ul>
+
+        <h3>Country-Specific Rules</h3>
+        <ul>
+          {Object.entries(gameDetails.rules.countrySpecific).map(([country, rule], index) => (
+            <li key={index}>{country}: {rule}</li>
+          ))}
+        </ul>
       </div>
     </div>
   );
