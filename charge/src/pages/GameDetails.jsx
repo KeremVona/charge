@@ -71,12 +71,15 @@ const GameDetails = () => {
         <p className="text-lg"><strong>Player Count:</strong> {gameDetails.player_count}</p>
       </div>
 
-      <h2 className="text-2xl font-semibold mt-4">Players</h2>
-      <ul className="list-disc list-inside">
-        {players.length > 0 ? (
-          players.map((player, index) => <li key={index}>{player.username}</li>)
+        {/* Player List */}
+      <h2 className="text-2xl font-semibold mt-6">Players</h2>
+      <ul className="list-disc pl-6">
+        {gameDetails.players && gameDetails.players.length > 0 ? (
+          gameDetails.players.map((player, index) => (
+            <li key={index} className="text-lg">{player}</li>
+          ))
         ) : (
-          <p>No players have joined yet.</p>
+          <p>No players joined yet.</p>
         )}
       </ul>
 

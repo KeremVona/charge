@@ -71,6 +71,37 @@ app.get("/api/games/:gameId", async (req, res) => {
   }
 });
 
+// Added later /api/games/:id
+
+app.get("/api/games/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const game = await db.query("SELECT * FROM games WHERE id = $1", [id]);
+
+    if (!game.rows.length) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    // Fetch list of players in the game
+    const players = await db.query(
+      "SELECT username FROM game_players WHERE game_id = $1",
+      [id]
+    );
+
+    // Attach players to the response
+    const gameDetails = {
+      ...game.rows[0],
+      players: players.rows.map((player) => player.username),
+    };
+
+    res.json(gameDetails);
+  } catch (err) {
+    console.error("Error fetching game details:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.post("/api/games/join/:gameId", async (req, res) => {
   const { gameId } = req.params;
   const { username } = req.body;
@@ -97,6 +128,42 @@ app.post("/api/games/join/:gameId", async (req, res) => {
     console.error("Error joining game:", error);
     console.log("Updated game after joining:", updatedGame);
     res.status(500).json({ error: "Failed to join game" });
+  }
+});
+
+// Added later /api/games/:id/join
+
+app.post("/api/games/:id/join", async (req, res) => {
+  const { id } = req.params; // Game ID from URL
+  const { userId, username } = req.body; // Data sent from frontend
+
+  try {
+    // Check if the user already joined
+    const existingPlayer = await db.query(
+      "SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (existingPlayer.rows.length > 0) {
+      return res.status(400).json({ error: "You have already joined this game." });
+    }
+
+    // Insert player into game_players
+    await db.query(
+      "INSERT INTO game_players (game_id, user_id, username) VALUES ($1, $2, $3)",
+      [id, userId, username]
+    );
+
+    // Update player count in the games table
+    await db.query(
+      "UPDATE games SET player_count = player_count + 1 WHERE id = $1",
+      [id]
+    );
+
+    res.json({ success: true, message: "Joined the game successfully!" });
+  } catch (err) {
+    console.error("Error joining game:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
