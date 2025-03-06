@@ -71,7 +71,7 @@ const GameList = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/join/${gameId}`, {
+      const response = await fetch(`http://localhost:5000/api/games/${gameId}/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

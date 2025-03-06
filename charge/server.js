@@ -42,104 +42,47 @@ app.get("/api/games", async (req, res) => {
 //app.get gamesid
 
 // Fetch game details by ID
-app.get("/api/games/:gameId", async (req, res) => {
-  const { gameId } = req.params;
-  try {
-    // Fetch game details including player_count
-    const result = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Game not found" });
-    }
-
-    const game = result.rows[0];
-
-    // Ensure rules is parsed only if it's a string
-    const parsedRules = typeof game.rules === 'string' ? JSON.parse(game.rules) : game.rules;
-
-    // Return game details with player_count
-    res.json({
-      ...game,
-      player_count: game.player_count, // Include player_count from games table
-      rules: parsedRules || { general: [], countrySpecific: {} },
-      plannedTime: game.planned_time,
-      isHistorical: game.is_historical,
-      isModded: game.is_modded,
-    });
-  } catch (err) {
-    console.error('Error fetching game details:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Added later /api/games/:id
-
 app.get("/api/games/:id", async (req, res) => {
   const { id } = req.params;
 
   try {
-    const game = await db.query("SELECT * FROM games WHERE id = $1", [id]);
-
-    if (!game.rows.length) {
+    // Fetch game details
+    const result = await pool.query("SELECT * FROM games WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Game not found" });
     }
+    
+    const game = result.rows[0];
 
-    // Fetch list of players in the game
-    const players = await db.query(
+    // Fetch players for this game
+    const playersResult = await pool.query(
       "SELECT username FROM game_players WHERE game_id = $1",
       [id]
     );
 
-    // Attach players to the response
-    const gameDetails = {
-      ...game.rows[0],
-      players: players.rows.map((player) => player.username),
-    };
-
-    res.json(gameDetails);
+    res.json({
+      ...game,
+      players: playersResult.rows.map((player) => player.username),
+      player_count: game.player_count,
+      rules: typeof game.rules === 'string' ? JSON.parse(game.rules) : game.rules || { general: [], countrySpecific: {} },
+      plannedTime: game.planned_time,
+      isHistorical: game.is_historical,
+      isModded: game.is_modded,
+    });
   } catch (err) {
     console.error("Error fetching game details:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
-app.post("/api/games/join/:gameId", async (req, res) => {
-  const { gameId } = req.params;
-  const { username } = req.body;
-
-  if (!username) {
-    return res.status(400).json({ error: "Username is required" });
-  }
-
-  try {
-    // Update player count
-    await pool.query("UPDATE games SET player_count = player_count + 1 WHERE id = $1", [gameId]);
-
-    // Add player to the players table
-    await pool.query("INSERT INTO players (game_id, username) VALUES ($1, $2)", [gameId, username]);
-
-    // Fetch updated game details
-    const updatedGame = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
-
-    // Broadcast updated player count to all clients
-    io.emit("updateGame", updatedGame.rows[0]);
-
-    res.json({ message: "Joined successfully" });
-  } catch (error) {
-    console.error("Error joining game:", error);
-    console.log("Updated game after joining:", updatedGame);
-    res.status(500).json({ error: "Failed to join game" });
-  }
-});
-
-// Added later /api/games/:id/join
-
+// ✅ FIXED: Join game (adds player to game_players & updates count)
 app.post("/api/games/:id/join", async (req, res) => {
-  const { id } = req.params; // Game ID from URL
-  const { userId, username } = req.body; // Data sent from frontend
+  const { id } = req.params;
+  const { userId, username } = req.body;
 
   try {
     // Check if the user already joined
-    const existingPlayer = await db.query(
+    const existingPlayer = await pool.query(
       "SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2",
       [id, userId]
     );
@@ -149,16 +92,19 @@ app.post("/api/games/:id/join", async (req, res) => {
     }
 
     // Insert player into game_players
-    await db.query(
+    await pool.query(
       "INSERT INTO game_players (game_id, user_id, username) VALUES ($1, $2, $3)",
       [id, userId, username]
     );
 
-    // Update player count in the games table
-    await db.query(
-      "UPDATE games SET player_count = player_count + 1 WHERE id = $1",
+    // Update player count
+    const updatedGame = await pool.query(
+      "UPDATE games SET player_count = player_count + 1 WHERE id = $1 RETURNING *",
       [id]
     );
+
+    // Emit updated game to WebSocket clients
+    io.emit("updateGame", updatedGame.rows[0]);
 
     res.json({ success: true, message: "Joined the game successfully!" });
   } catch (err) {
