@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { io } from "socket.io-client";
 import Navbar from "../components/Navbar";
+/*import Delete from "../components/Delete";*/
 
 const socket = io("http://localhost:5000"); // WebSocket connection
 

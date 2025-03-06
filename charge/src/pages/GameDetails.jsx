@@ -1,87 +1,3 @@
-/*import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
-
-const socket = io("http://localhost:5000");
-
-const GameDetails = () => {
-  const { gameId } = useParams(); // Get game ID from URL
-  const [game, setGame] = useState(null);
-
-  useEffect(() => {
-    // Fetch game from server
-    fetch(`http://localhost:5000/api/games/${gameId}`)
-      .then((res) => res.json())
-      .then((data) => setGame(data))
-      .catch((error) => console.error("Error fetching game:", error));
-
-    // Listen for game updates
-    socket.on("updateGame", (updatedGame) => {
-      if (updatedGame.id === gameId) {
-        setGame(updatedGame);
-      }
-    });
-
-    return () => {
-      socket.off("updateGame");
-    };
-  }, [gameId]);
-
-  if (!game) {
-    return <p>Loading game details...</p>;
-  }
-
-  return (
-    <div className="container mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Game Details</h2>
-      <p><strong>Host:</strong> {game.host}</p>
-      <p><strong>Status:</strong> {game.status}</p>
-      <p><strong>Players:</strong> {game.player_count}</p>
-      <p><strong>Room ID:</strong> {game.room_id || "N/A"}</p>
-      <p><strong>Type:</strong> {game.is_historical ? "Historical" : "Unhistorical"}</p>
-      <p><strong>Version:</strong> {game.is_modded ? "Modded" : "Vanilla"}</p>
-
-      <h3 className="text-xl font-semibold mt-4">Game Rules</h3>
-{game.rules ? (
-  (() => {
-    const parsedRules = typeof game.rules === "string" ? JSON.parse(game.rules) : game.rules;
-
-    return (
-      <div>
-        <h4 className="font-medium">General Rules</h4>
-        {parsedRules.general && parsedRules.general.length > 0 ? (
-          <ul>
-            {parsedRules.general.map((rule, index) => (
-              <li key={index}>- {rule}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No general rules specified.</p>
-        )}
-
-        {parsedRules.countrySpecific &&
-          Object.keys(parsedRules.countrySpecific).map((country) => (
-            <div key={country}>
-              <h4 className="font-medium mt-4">{country} Rules</h4>
-              <ul>
-                {parsedRules.countrySpecific[country].map((rule, index) => (
-                  <li key={index}>- {rule}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-      </div>
-    );
-  })()
-) : (
-  <p>No rules specified.</p>
-)}
-    </div>
-  );
-};
-
-export default GameDetails;*/
-
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
@@ -113,6 +29,7 @@ const GameDetails = () => {
   console.log("gameId from URL:", gameId); // Check if it's being passed correctly
 
   const [gameDetails, setGameDetails] = useState(null);
+  const [players, setPlayers] = useState([]);
 
   useEffect(() => {
     if (gameId) {
@@ -130,6 +47,7 @@ const GameDetails = () => {
         const data = await response.json();
         console.log("Game details fetched:", data);
         setGameDetails(data);
+        setPlayers(data.players || []); // Set players list if available
         } catch (error) {
           console.error("Error fetching game details:", error);
         }
@@ -152,6 +70,15 @@ const GameDetails = () => {
         <p className="text-lg"><strong>Status:</strong> {gameDetails.status}</p>
         <p className="text-lg"><strong>Player Count:</strong> {gameDetails.player_count}</p>
       </div>
+
+      <h2 className="text-2xl font-semibold mt-4">Players</h2>
+      <ul className="list-disc list-inside">
+        {players.length > 0 ? (
+          players.map((player, index) => <li key={index}>{player.username}</li>)
+        ) : (
+          <p>No players have joined yet.</p>
+        )}
+      </ul>
 
       <div className="mt-6">
         <h2 className="text-2xl font-semibold mb-2">Rules</h2>

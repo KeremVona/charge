@@ -71,6 +71,35 @@ app.get("/api/games/:gameId", async (req, res) => {
   }
 });
 
+app.post("/api/games/join/:gameId", async (req, res) => {
+  const { gameId } = req.params;
+  const { username } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ error: "Username is required" });
+  }
+
+  try {
+    // Update player count
+    await pool.query("UPDATE games SET player_count = player_count + 1 WHERE id = $1", [gameId]);
+
+    // Add player to the players table
+    await pool.query("INSERT INTO players (game_id, username) VALUES ($1, $2)", [gameId, username]);
+
+    // Fetch updated game details
+    const updatedGame = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
+
+    // Broadcast updated player count to all clients
+    io.emit("updateGame", updatedGame.rows[0]);
+
+    res.json({ message: "Joined successfully" });
+  } catch (error) {
+    console.error("Error joining game:", error);
+    console.log("Updated game after joining:", updatedGame);
+    res.status(500).json({ error: "Failed to join game" });
+  }
+});
+
 // WebSocket connection for real-time updates
 /*io.on("connection", (socket) => {
   console.log("A user connected to WebSocket");
