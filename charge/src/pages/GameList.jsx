@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import Header from "../components/Header";
 
 const socket = io("http://localhost:5000"); // WebSocket connection
 
@@ -15,8 +16,21 @@ const GameList = () => {
   const checkUserLogin = () => {
     const storedUser = localStorage.getItem("user");
     console.log("Stored user data:", storedUser); // Debug log
+
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+        try {
+            const parsedUser = JSON.parse(storedUser);
+            
+            if (!parsedUser.id) {
+                console.error("User ID is missing in stored user data:", parsedUser);
+                return;
+            }
+
+            setUser(parsedUser);
+            console.log("User logged in:", parsedUser); // Confirm login in console
+        } catch (error) {
+            console.error("Error parsing stored user data:", error);
+        }
     }
   };
 
@@ -30,25 +44,6 @@ const GameList = () => {
       console.error("Error fetching games:", error);
     }
   };
-
-  // Fetch games on component mount
-  /*useEffect(() => {
-    fetch("http://localhost:5000/api/games")
-      .then((res) => res.json())
-      .then((data) => setGames(data))
-      .catch((error) => console.error("Error fetching games:", error));
-
-    // Listen for game updates via WebSockets
-    socket.on("updateGames", (updatedGames) => {
-      setGames(updatedGames);
-    });
-    
-    checkUserLogin();
-
-    return () => {
-      socket.off("updateGames"); // Cleanup WebSocket listener on unmount
-    };
-  }, []);*/
 
   useEffect(() => {
     fetchGames(); // Fetch initial game list
@@ -70,19 +65,27 @@ const GameList = () => {
       return;
     }
 
+    const requestData = {
+      userId: user.id,
+      username: user.username,
+    };
+
+    console.log("Let's see ", requestData);
+
     try {
       const response = await fetch(`http://localhost:5000/api/games/${gameId}/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username: user.username }),
+        body: JSON.stringify({ userId: user.id, username: user.username }),
       });
 
       if (response.ok) {
         fetchGames(); // Refresh game list to update player count
       } else {
         console.error("Failed to join the game.");
+        alert("Hint: You can't join twice")
       }
     } catch (error) {
       console.error("Error joining game:", error);
@@ -91,7 +94,7 @@ const GameList = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <Navbar />
+      <Header />
       <h1 className="text-2xl font-bold mb-4">Game List</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {games.map((game) => (

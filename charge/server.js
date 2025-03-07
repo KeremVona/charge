@@ -113,26 +113,6 @@ app.post("/api/games/:id/join", async (req, res) => {
   }
 });
 
-// WebSocket connection for real-time updates
-/*io.on("connection", (socket) => {
-  console.log("A user connected to WebSocket");
-
-  socket.on("addGame", async (newGame) => {
-    await pool.query(
-      "INSERT INTO games (host, status, player_count, room_id) VALUES ($1, $2, $3, $4)",
-      [newGame.host, newGame.status, newGame.player_count, newGame.room_id]
-    );
-
-    // Broadcast updated game list to all clients
-    const updatedGames = await pool.query("SELECT * FROM games");
-    io.emit("updateGames", updatedGames.rows);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected from WebSocket");
-  });
-});*/
-
 io.on("connection", (socket) => {
   console.log("A user connected to WebSocket");
 

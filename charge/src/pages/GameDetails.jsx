@@ -2,28 +2,9 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Button1 from '../components/Button';
+import Header from '../components/Header';
 
 const GameDetails = () => {
-  /*const [gameDetails, setGameDetails] = useState(null);
-
-  useEffect(() => {
-    console.log("gameId:", gameId); // Check if gameId is valid
-    const fetchGameDetails = async () => {
-      try {
-        const response = await fetch(`/api/games/${gameId}`);
-        const data = await response.json();
-        console.log("Game details fetched:", data); // Log to verify the response
-        setGameDetails(data);
-      } catch (error) {
-        console.error("Error fetching game details:", error);
-      }
-    };
-
-    if (gameId) {
-      fetchGameDetails();
-    }
-  }, [gameId]);*/
-
   const { gameId } = useParams(); // Get the gameId from the URL
   const navigate = useNavigate(); // Hook to navigate programmatically
   console.log("gameId from URL:", gameId); // Check if it's being passed correctly
@@ -62,6 +43,8 @@ const GameDetails = () => {
   }
 
   return (
+    <>
+    <Header />
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h1 className="text-3xl font-semibold text-center mb-4">Game Details</h1>
       
@@ -112,6 +95,7 @@ const GameDetails = () => {
         <Button1 />
       </div>
     </div>
+    </>
   );
 };
 
