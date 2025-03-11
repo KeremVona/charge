@@ -113,6 +113,40 @@ app.post("/api/games/:id/join", async (req, res) => {
   }
 });
 
+app.post("/api/games/:id/leave", async (req, res) => {
+  const { id } = req.params; // Game ID
+  const { userId } = req.body; // User ID from frontend
+
+  try {
+    // Check if the user is in the game
+    const existingPlayer = await pool.query(
+      "SELECT * FROM game_players WHERE game_id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (existingPlayer.rows.length === 0) {
+      return res.status(400).json({ error: "You are not in this game." });
+    }
+
+    // Remove player from game_players table
+    await pool.query("DELETE FROM game_players WHERE game_id = $1 AND user_id = $2", [id, userId]);
+
+    // Update player count in games table
+    const updatedGame = await pool.query(
+      "UPDATE games SET player_count = player_count - 1 WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    // Emit update via WebSockets
+    io.emit("updateGame", updatedGame.rows[0]);
+
+    res.json({ success: true, message: "Left the game successfully!" });
+  } catch (err) {
+    console.error("Error leaving game:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 io.on("connection", (socket) => {
   console.log("A user connected to WebSocket");
 

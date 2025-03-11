@@ -19,6 +19,8 @@ export default function Header() {
         </a>
       </div>
 
+      <p>Charge. A Hearts of Iron IV Multiplayer Game Finder</p>
+
       <div className="hidden md:block">
         <nav aria-label="Global">
           <ul className="flex items-center gap-6 text-sm">

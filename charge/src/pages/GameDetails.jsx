@@ -8,35 +8,68 @@ const GameDetails = () => {
   const { gameId } = useParams(); // Get the gameId from the URL
   const navigate = useNavigate(); // Hook to navigate programmatically
   console.log("gameId from URL:", gameId); // Check if it's being passed correctly
+  const [user, setUser] = useState(null);
 
   const [gameDetails, setGameDetails] = useState(null);
   const [players, setPlayers] = useState([]);
 
-  useEffect(() => {
-    if (gameId) {
-      const fetchGameDetails = async () => {
-        //const url = `/api/games/${gameId}`;
-        const url = `http://localhost:5000/api/games/${gameId}`;
-        console.log("Fetching from URL:", url); // Log the URL
-        try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          const text = await response.text(); // Get the response as text to check for error pages
-          console.error("Error response:", text); // Log the response text (which may be HTML)
-          return;
-        }
-        const data = await response.json();
-        console.log("Game details fetched:", data);
-        setGameDetails(data);
-        setPlayers(data.players || []); // Set players list if available
-        } catch (error) {
-          console.error("Error fetching game details:", error);
-        }
-      };
-
-      fetchGameDetails();
+  const fetchGameDetails = async () => {
+    if (!gameId) return;
+    
+    const url = `http://localhost:5000/api/games/${gameId}`;
+    console.log("Fetching from URL:", url);
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        const text = await response.text();
+        console.error("Error response:", text);
+        return;
+      }
+      const data = await response.json();
+      console.log("Game details fetched:", data);
+      setGameDetails(data);
+      setPlayers(data.players || []); // Ensure players list is set
+    } catch (error) {
+      console.error("Error fetching game details:", error);
     }
+  };
+
+  useEffect(() => {
+    // Fetch user from localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  
+    fetchGameDetails(); // Call it here too
   }, [gameId]);
+
+  // Function to leave the game
+const handleLeaveGame = async () => {
+  if (!user) {
+    alert("You must be logged in to leave a game.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/games/${gameId}/leave`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: user.id }),
+    });
+
+    if (response.ok) {
+      fetchGameDetails(); // Refresh game details after leaving
+    } else {
+      console.error("Failed to leave the game.");
+    }
+  } catch (error) {
+    console.error("Error leaving game:", error);
+  }
+};
 
   if (!gameDetails) {
     return <div>Loading game details...</div>;
@@ -93,6 +126,11 @@ const GameDetails = () => {
       <div className="mt-6 flex justify-center">
         
         <Button1 />
+        {user && (
+      <button onClick={handleLeaveGame} className="bg-red-500 text-white px-4 py-2 rounded mt-4">
+        Leave Game
+      </button>
+    )}
       </div>
     </div>
     </>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { io } from "socket.io-client";
 import Navbar from "../components/Navbar";
+import Header from "../components/Header";
 /*import Delete from "../components/Delete";*/
 
 const socket = io("http://localhost:5000"); // WebSocket connection
@@ -97,7 +98,7 @@ const GameAdd = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <Navbar />
+      <Header />
       <h1 className="text-2xl font-bold mb-4">Host a New Game</h1>
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-lg">
         <div>
