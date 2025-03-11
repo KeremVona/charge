@@ -54,6 +54,13 @@ app.get("/api/games/:id", async (req, res) => {
     
     const game = result.rows[0];
 
+    const hostResult = await pool.query(
+      "SELECT username FROM users WHERE id = $1", 
+      [game.host]
+    );
+    
+    const hostUsername = hostResult.rows[0]?.username || "Unknown";
+
     // Fetch players for this game
     const playersResult = await pool.query(
       "SELECT username FROM game_players WHERE game_id = $1",
@@ -62,6 +69,7 @@ app.get("/api/games/:id", async (req, res) => {
 
     res.json({
       ...game,
+      host: hostUsername,
       players: playersResult.rows.map((player) => player.username),
       player_count: game.player_count,
       rules: typeof game.rules === 'string' ? JSON.parse(game.rules) : game.rules || { general: [], countrySpecific: {} },
@@ -147,6 +155,40 @@ app.post("/api/games/:id/leave", async (req, res) => {
   }
 });
 
+app.post("/api/games/:id/kick", async (req, res) => {
+  const { id } = req.params; // Game ID
+  const { hostId, playerId } = req.body; // Host and player being kicked
+
+  try {
+    // Check if the requester is the host
+    const game = await pool.query("SELECT host FROM games WHERE id = $1", [id]);
+    if (game.rows.length === 0) {
+      return res.status(404).json({ error: "Game not found" });
+    }
+
+    if (game.rows[0].host !== hostId) {
+      return res.status(403).json({ error: "Only the host can kick players" });
+    }
+
+    // Remove player from game_players
+    await pool.query("DELETE FROM game_players WHERE game_id = $1 AND user_id = $2", [id, playerId]);
+
+    // Update player count
+    await pool.query("UPDATE games SET player_count = player_count - 1 WHERE id = $1", [id]);
+
+    // Fetch updated player list
+    const updatedPlayers = await pool.query("SELECT username FROM game_players WHERE game_id = $1", [id]);
+
+    // Broadcast update to all clients
+    io.emit("updatePlayers", { gameId: id, players: updatedPlayers.rows });
+
+    res.json({ success: true, message: "Player kicked successfully" });
+  } catch (err) {
+    console.error("Error kicking player:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 io.on("connection", (socket) => {
   console.log("A user connected to WebSocket");
 
@@ -170,6 +212,32 @@ io.on("connection", (socket) => {
       io.emit("updateGames", updatedGames.rows);
     } catch (err) {
       console.error("Error adding game:", err);
+    }
+  });
+
+  socket.on("kickPlayer", async (gameId, playerUsername) => {
+    try {
+      // Check if the user is the host
+      const gameResult = await pool.query("SELECT host FROM games WHERE id = $1", [gameId]);
+      const game = gameResult.rows[0];
+  
+      if (game && game.host === playerUsername) {
+        // Don't allow the host to kick themselves, or you could modify the logic to allow it.
+        return socket.emit("error", "Host cannot kick themselves");
+      }
+  
+      // Remove the player from the game
+      await pool.query("DELETE FROM game_players WHERE game_id = $1 AND username = $2", [gameId, playerUsername]);
+  
+      // Update player count
+      await pool.query("UPDATE games SET player_count = player_count - 1 WHERE id = $1", [gameId]);
+  
+      // Fetch the updated game details
+      const updatedGame = await pool.query("SELECT * FROM games WHERE id = $1", [gameId]);
+      io.emit("updateGame", updatedGame.rows[0]); // Emit the updated game to all connected clients
+  
+    } catch (err) {
+      console.error("Error kicking player:", err);
     }
   });
   

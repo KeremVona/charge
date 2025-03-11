@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import Button1 from '../components/Button';
 import Header from '../components/Header';
+import io from 'socket.io-client';
 
 const GameDetails = () => {
   const { gameId } = useParams(); // Get the gameId from the URL
@@ -12,6 +13,7 @@ const GameDetails = () => {
 
   const [gameDetails, setGameDetails] = useState(null);
   const [players, setPlayers] = useState([]);
+  const [socket, setSocket] = useState(null);
 
   const fetchGameDetails = async () => {
     if (!gameId) return;
@@ -28,7 +30,7 @@ const GameDetails = () => {
       }
       const data = await response.json();
       console.log("Game details fetched:", data);
-      setGameDetails(data);
+      setGameDetails(data || {});
       setPlayers(data.players || []); // Ensure players list is set
     } catch (error) {
       console.error("Error fetching game details:", error);
@@ -36,13 +38,21 @@ const GameDetails = () => {
   };
 
   useEffect(() => {
+    const socketConnection = io('http://localhost:5000'); // Adjust the URL as needed
+    setSocket(socketConnection); // Set the socket connection
     // Fetch user from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    const parsedUser = JSON.parse(storedUser); // Define parsedUser
+    console.log("Loaded user:", parsedUser);
+    setUser(parsedUser);
+  }
   
     fetchGameDetails(); // Call it here too
+
+    return () => {
+      socketConnection.disconnect(); // Clean up on unmount
+    };
   }, [gameId]);
 
   // Function to leave the game
@@ -69,6 +79,12 @@ const handleLeaveGame = async () => {
   } catch (error) {
     console.error("Error leaving game:", error);
   }
+};
+
+
+
+const handleKickPlayer = async (playerId) => {
+  socket.emit("kickPlayer", gameDetails.id, username);
 };
 
   if (!gameDetails) {
@@ -111,6 +127,27 @@ const handleLeaveGame = async () => {
               ))}
             </ul>
           </div>
+          {gameDetails?.host && user && gameDetails.host === user.id && (
+  <button className="bg-blue-500 text-white px-4 py-2 rounded">
+    Host Controls
+  </button>
+)}
+          <ul>
+  {players.map((player, index) => (
+    <li key={player.id || index} className="flex justify-between items-center">
+      {player.username}
+
+      {gameDetails && user && gameDetails.host && gameDetails.host === user.username && (
+        <button
+          onClick={() => handleKickPlayer(player.id)}
+          className="ml-2 bg-red-500 text-white px-2 py-1 rounded"
+        >
+          Kick
+        </button>
+      )}
+    </li>
+  ))}
+</ul>
 
           <div>
             <h3 className="text-xl font-medium">Country-Specific Rules</h3>
