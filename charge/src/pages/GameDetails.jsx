@@ -38,6 +38,7 @@ const GameDetails = () => {
   };
 
   useEffect(() => {
+    console.log("Players array:", players); // Debugging
     const socketConnection = io('http://localhost:5000'); // Adjust the URL as needed
     setSocket(socketConnection); // Set the socket connection
     // Fetch user from localStorage
@@ -83,8 +84,18 @@ const handleLeaveGame = async () => {
 
 
 
-const handleKickPlayer = async (playerId) => {
-  socket.emit("kickPlayer", gameDetails.id, username);
+const handleKickPlayer = async (playerUsername) => {
+  if (!playerUsername) {
+    console.error("Player username is undefined");
+    return;
+  }
+  if (!socket) {
+    console.error("Socket is not defined.");
+    return;
+  }
+  
+  console.log("Kicking player:", playerUsername);
+  socket.emit("kickPlayer", { gameId, playerUsername });
 };
 
   if (!gameDetails) {
@@ -133,20 +144,20 @@ const handleKickPlayer = async (playerId) => {
   </button>
 )}
           <ul>
-  {players.map((player, index) => (
-    <li key={player.id || index} className="flex justify-between items-center">
-      {player.username}
-
-      {gameDetails && user && gameDetails.host && gameDetails.host === user.username && (
-        <button
-          onClick={() => handleKickPlayer(player.id)}
-          className="ml-2 bg-red-500 text-white px-2 py-1 rounded"
-        >
-          Kick
-        </button>
-      )}
-    </li>
-  ))}
+            
+          {players.map((player, index) => (
+  <div key={index} className="flex justify-between items-center">
+    <span>{player.username || player}</span>
+    {gameDetails.host == user?.id && (
+      <button 
+        onClick={() => handleKickPlayer(player.username || player)}
+        className="bg-red-600 text-white px-2 py-1 rounded"
+      >
+        Kick
+      </button>
+    )}
+  </div>
+))}
 </ul>
 
           <div>
