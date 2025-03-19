@@ -102,6 +102,9 @@ const handleKickPlayer = async (playerUsername) => {
     return <div>Loading game details...</div>;
   }
 
+  console.log("Game Host Username:", gameDetails.host);
+console.log("Current User Username:", user?.username);
+
   return (
     <>
     <Header />
@@ -148,7 +151,7 @@ const handleKickPlayer = async (playerUsername) => {
           {players.map((player, index) => (
   <div key={index} className="flex justify-between items-center">
     <span>{player.username || player}</span>
-    {gameDetails.host == user?.id && (
+    {gameDetails.host === user?.username && ( // Compare host by username
       <button 
         onClick={() => handleKickPlayer(player.username || player)}
         className="bg-red-600 text-white px-2 py-1 rounded"
