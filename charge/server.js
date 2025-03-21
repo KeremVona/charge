@@ -28,6 +28,10 @@ const io = new Server(server, {
 app.use(express.json());
 app.use(cors());
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the API');
+});
+
 // Fetch all games
 app.get("/api/games", async (req, res) => {
   try {
