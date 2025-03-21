@@ -19,7 +19,8 @@ app.use("/api/auth", authRoutes);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173", // React frontend URL
+    origin: process.env.CORS_ORIGIN,  // React frontend URL
+    credentials: true,
     methods: ["GET", "POST"]
   }
 });
