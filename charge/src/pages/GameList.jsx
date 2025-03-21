@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 
-const socket = io("http://localhost:5000"); // WebSocket connection
+const socket = io(import.meta.env.VITE_BACKEND_URL); // WebSocket connection
 
 const GameList = () => {
   const [games, setGames] = useState([]);
@@ -37,7 +37,7 @@ const GameList = () => {
   // Fetch game list from the backend
   const fetchGames = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/games");
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/games`);
       const data = await response.json();
       setGames(data);
     } catch (error) {
@@ -73,7 +73,7 @@ const GameList = () => {
     console.log("Let's see ", requestData);
 
     try {
-      const response = await fetch(`http://localhost:5000/api/games/${gameId}/join`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/games/${gameId}/join`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

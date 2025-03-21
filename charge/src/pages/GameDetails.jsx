@@ -18,7 +18,7 @@ const GameDetails = () => {
   const fetchGameDetails = async () => {
     if (!gameId) return;
     
-    const url = `http://localhost:5000/api/games/${gameId}`;
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/games/${gameId}`;
     console.log("Fetching from URL:", url);
     
     try {
@@ -39,7 +39,7 @@ const GameDetails = () => {
 
   useEffect(() => {
     console.log("Players array:", players); // Debugging
-    const socketConnection = io('http://localhost:5000'); // Adjust the URL as needed
+    const socketConnection = io(import.meta.env.VITE_BACKEND_URL); // Adjust the URL as needed
     setSocket(socketConnection); // Set the socket connection
     // Fetch user from localStorage
   const storedUser = localStorage.getItem("user");
@@ -64,7 +64,7 @@ const handleLeaveGame = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:5000/api/games/${gameId}/leave`, {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/games/${gameId}/leave`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
