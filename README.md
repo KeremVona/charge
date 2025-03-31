@@ -8,12 +8,12 @@ You can kick players that you don't want in your lobby
 
 To run locally:
 
-in bash terminal, npm install
-cd charge
-npm install
+in bash terminal, npm install,
+cd charge,
+npm install,
 npm run dev
 
-in another terminal npm install
-cd charge
-npm install
+in another terminal npm install,
+cd charge,
+npm install,
 node server.js
