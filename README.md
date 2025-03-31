@@ -63,12 +63,6 @@ Make a .env file and configure your database, WebSocket server.
 
 * Join a game to participate in a multiplayer session.
 
-## Future Improvements
-
-* Text Chat Rooms: Separate text channels for lobbies.
-
-* Game Host Controls: Hosts can ban players, and change rules mid-lobby.
-
 ## Contributing
 
 Contributions are welcome! Feel free to open issues and submit pull requests.
