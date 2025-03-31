@@ -8,9 +8,9 @@ The Hearts of Iron 4 Multiplayer Game Finder is a web-based platform that allows
 
 * **User Registration & Login:** Secure authentication system for players.
 
-* **Game Listings:** Players can browse and filter listed multiplayer games.
+* **Game Listings:** Players can browse listed multiplayer games.
 
-* **Game Hosting:** Users can create and manage their game listings.
+* **Game Hosting:** Users can make and manage their game listings.
 
 * **Join System:** Players can join listed games, and the player count updates in real-time.
 
@@ -58,8 +58,6 @@ Make a .env file and configure your database, WebSocket server.
 * Host a game by providing details such as game mode and rules.
 
 * Join a game to participate in a multiplayer session.
-
-* Use built-in voice chat for pre-game discussions and coordination.
 
 ## Future Improvements
 
