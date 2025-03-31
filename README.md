@@ -30,8 +30,6 @@ The Hearts of Iron 4 Multiplayer Game Finder is a web-based platform that allows
 
 * **Real-Time Updates:** WebSockets
 
-* **Voice Chat:** PeerJS
-
 ## Installation
 
 1. **Clone the repository**
