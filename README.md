@@ -67,11 +67,11 @@ Make a .env file and configure your database, WebSocket server.
 
 Contributions are welcome! Feel free to open issues and submit pull requests.
 
-License
+## License
 
 This project is licensed under the MIT License.
 
-Contact
+## Contact
 
 For any questions or feedback, reach out via keremvona@gmail.com.
 
