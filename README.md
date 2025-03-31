@@ -49,7 +49,7 @@ Make a .env file and configure your database, WebSocket server.
 
 ```npm run dev```
 
-5. ** In another terminal**
+5. **In another terminal**
 ```cd charge```
 ```node server.js```
 
